@@ -1,0 +1,22 @@
+{
+  "metadataAttributes": {
+    "course": "git-version-control",
+    "courseName": "Version Control",
+    "program": "systemutvecklare-java",
+    "semester": "autumn-2026",
+    "school": "ITHS",
+    "documentType": "course-info",
+    "level": "beginner",
+    "topics": [
+      "git",
+      "version-control",
+      "branches",
+      "merge-conflicts",
+      "collaboration"
+    ],
+    "format": [
+      "hands-on-labs"
+    ],
+    "language": "en"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "metadataAttributes": {
+    "course": "database-fundamentals",
+    "courseName": "Database Fundamentals",
+    "program": "systemutvecklare-java",
+    "semester": "spring-2026",
+    "school": "ITHS",
+    "documentType": "course-info",
+    "level": "beginner",
+    "topics": [
+      "databases",
+      "sql",
+      "relational-databases",
+      "data-modeling",
+      "schemas"
+    ],
+    "format": [
+      "lectures",
+      "labs",
+      "weekly-exercises"
+    ],
+    "language": "en"
+  }
+}

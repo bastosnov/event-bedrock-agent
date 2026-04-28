@@ -1,0 +1,22 @@
+{
+  "metadataAttributes": {
+    "course": "frontend-basics",
+    "courseName": "Frontend Introduction",
+    "program": "systemutvecklare-java",
+    "semester": "spring-2026",
+    "school": "ITHS",
+    "documentType": "course-info",
+    "level": "beginner",
+    "topics": [
+      "frontend",
+      "html",
+      "css",
+      "javascript",
+      "client-server"
+    ],
+    "format": [
+      "hands-on-coding"
+    ],
+    "language": "en"
+  }
+}

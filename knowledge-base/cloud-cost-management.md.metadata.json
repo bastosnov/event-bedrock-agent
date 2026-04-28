@@ -1,0 +1,22 @@
+{
+  "metadataAttributes": {
+    "course": "cloud-development",
+    "courseName": "Cloud Cost Management",
+    "program": "systemutvecklare-java",
+    "semester": "autumn-2026",
+    "school": "ITHS",
+    "documentType": "course-info",
+    "level": "beginner",
+    "topics": [
+      "aws",
+      "cloud-costs",
+      "pricing",
+      "usage-monitoring",
+      "cost-control"
+    ],
+    "format": [
+      "practical-exercises"
+    ],
+    "language": "en"
+  }
+}

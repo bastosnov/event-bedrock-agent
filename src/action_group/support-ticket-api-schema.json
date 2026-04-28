@@ -1,0 +1,118 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Support Ticket API",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/create-support-ticket": {
+      "post": {
+        "operationId": "createSupportTicket",
+        "description": "Create an ITHS support ticket in DynamoDB.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSupportTicketRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Support ticket created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateSupportTicketResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CreateSupportTicketRequest": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string",
+            "description": "Problem description from the student"
+          },
+          "status": {
+            "type": "string",
+            "description": "Optional ticket status override",
+            "enum": ["Open", "Closed"],
+            "default": "Open"
+          }
+        },
+        "required": ["description"]
+      },
+      "SupportTicket": {
+        "type": "object",
+        "properties": {
+          "ticketId": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "UTC ISO 8601 timestamp"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["Open", "Closed"]
+          }
+        },
+        "required": ["ticketId", "description", "createdAt", "status"]
+      },
+      "CreateSupportTicketResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "ticket": {
+            "$ref": "#/components/schemas/SupportTicket"
+          }
+        },
+        "required": ["message", "ticket"]
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string"
+          }
+        },
+        "required": ["error"]
+      }
+    }
+  }
+}

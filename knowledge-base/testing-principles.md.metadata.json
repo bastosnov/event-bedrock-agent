@@ -1,0 +1,23 @@
+{
+  "metadataAttributes": {
+    "course": "testing",
+    "courseName": "Testing Principles",
+    "program": "systemutvecklare-java",
+    "semester": "spring-2026",
+    "school": "ITHS",
+    "documentType": "course-info",
+    "level": "beginner",
+    "topics": [
+      "testing",
+      "unit-testing",
+      "integration-testing",
+      "test-coverage",
+      "testing-frameworks"
+    ],
+    "format": [
+      "labs",
+      "assignments"
+    ],
+    "language": "en"
+  }
+}

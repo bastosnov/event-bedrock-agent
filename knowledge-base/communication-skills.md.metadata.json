@@ -1,0 +1,23 @@
+{
+  "metadataAttributes": {
+    "course": "professional-skills",
+    "courseName": "Communication Skills",
+    "program": "systemutvecklare-java",
+    "semester": "spring-2026",
+    "school": "ITHS",
+    "documentType": "course-info",
+    "level": "beginner",
+    "topics": [
+      "communication",
+      "teamwork",
+      "feedback",
+      "presentations",
+      "collaboration"
+    ],
+    "format": [
+      "workshops",
+      "group-exercises"
+    ],
+    "language": "en"
+  }
+}

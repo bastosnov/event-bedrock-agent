@@ -1,0 +1,594 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ITHoS Bedrock Agent Demo</title>
+    <style>
+      :root {
+        --bg-0: #1c102a;
+        --bg-1: #85421a;
+        --surface: rgba(18, 10, 28, 0.72);
+        --surface-soft: rgba(255, 255, 255, 0.06);
+        --ink: #ffffff;
+        --ink-soft: #dccfd9;
+        --accent: #a96139;
+        --accent-strong: #8f4f2d;
+        --ok: #93f5b5;
+        --warn: #ffd88f;
+        --err: #ff9f9f;
+        --line: rgba(255, 255, 255, 0.22);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Overpass", "Avenir Next", "Segoe UI", sans-serif;
+        color: var(--ink);
+        background: linear-gradient(to right, var(--bg-0) 0%, var(--bg-1) 100%);
+      }
+
+      .wrap {
+        max-width: 920px;
+        margin: 2.5rem auto;
+        padding: 0 1rem;
+      }
+
+      .panel {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 1rem;
+        box-shadow: 0 18px 38px rgba(0, 0, 0, 0.25);
+        backdrop-filter: blur(6px);
+      }
+
+      .panel + .panel {
+        margin-top: 1rem;
+      }
+
+      h1 {
+        margin: 0 0 1rem;
+        font-size: clamp(1.4rem, 2.6vw, 2rem);
+      }
+
+      h2 {
+        margin: 0 0 0.65rem;
+        font-size: 1rem;
+        color: var(--ink-soft);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+
+      .row {
+        display: grid;
+        gap: 0.65rem;
+        grid-template-columns: 1fr auto;
+      }
+
+      .row-3 {
+        display: grid;
+        gap: 0.65rem;
+        grid-template-columns: 1fr 1fr auto;
+      }
+
+      input,
+      button {
+        font: inherit;
+        border-radius: 10px;
+      }
+
+      input {
+        width: 100%;
+        padding: 0.7rem 0.8rem;
+        border: 1px solid var(--line);
+        color: var(--ink);
+        background: var(--surface-soft);
+      }
+
+      input::placeholder {
+        color: #cdbdca;
+      }
+
+      button {
+        border: 0;
+        padding: 0.7rem 0.9rem;
+        background: var(--accent);
+        color: #fff;
+        cursor: pointer;
+        transition: transform 120ms ease, background 120ms ease;
+      }
+
+      button:hover {
+        background: var(--accent-strong);
+        transform: translateY(-1px);
+      }
+
+      .status {
+        margin-top: 0.7rem;
+        color: var(--ink-soft);
+        font-size: 0.95rem;
+      }
+
+      .count {
+        margin-top: 0.7rem;
+        font-weight: 700;
+        font-size: 1.65rem;
+      }
+
+      .ticket-list {
+        margin-top: 0.8rem;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: rgba(9, 5, 14, 0.45);
+        max-height: 320px;
+        overflow: auto;
+        padding: 0.6rem;
+      }
+
+      .ticket-item {
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 0.55rem 0.65rem;
+        background: rgba(255, 255, 255, 0.06);
+      }
+
+      .ticket-item + .ticket-item {
+        margin-top: 0.45rem;
+      }
+
+      .ticket-meta {
+        margin: 0;
+        font-size: 0.8rem;
+        color: var(--ink-soft);
+      }
+
+      .ticket-desc {
+        margin: 0.25rem 0 0;
+        font-size: 0.95rem;
+        line-height: 1.4;
+        color: #f7eef5;
+        white-space: pre-wrap;
+      }
+
+      .ticket-status {
+        display: inline-block;
+        padding: 0.1rem 0.45rem;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        border: 1px solid var(--line);
+        margin-left: 0.35rem;
+      }
+
+      .ticket-status.open {
+        background: rgba(147, 245, 181, 0.18);
+        color: var(--ok);
+      }
+
+      .ticket-status.closed {
+        background: rgba(255, 216, 143, 0.18);
+        color: var(--warn);
+      }
+
+      .chat-log {
+        margin-top: 0.8rem;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: rgba(9, 5, 14, 0.45);
+        min-height: 200px;
+        max-height: 320px;
+        overflow: auto;
+        padding: 0.6rem;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      .chat-onboarding {
+        margin-top: 0.7rem;
+        display: grid;
+        gap: 0.65rem;
+      }
+
+      .chat-onboarding-title {
+        margin: 0;
+        font-size: 0.95rem;
+        color: var(--ink-soft);
+      }
+
+      .chat-toolbar {
+        margin-top: 0.7rem;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 0.6rem;
+      }
+
+      .chat-compose {
+        margin-top: 0.7rem;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 0.65rem;
+      }
+
+      .btn-subtle {
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.08);
+        color: var(--ink);
+      }
+
+      .msg {
+        margin: 0;
+        padding: 0.55rem 0.7rem;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.06);
+      }
+
+      .msg.user {
+        background: rgba(169, 97, 57, 0.28);
+        border-color: rgba(169, 97, 57, 0.65);
+      }
+
+      .msg.assistant {
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .msg-meta {
+        margin: 0 0 0.2rem;
+        color: var(--ink-soft);
+        font-size: 0.75rem;
+      }
+
+      .msg-text {
+        margin: 0;
+        font-size: 0.95rem;
+        line-height: 1.45;
+        color: #f7eef5;
+        white-space: pre-wrap;
+      }
+
+      .msg + .msg {
+        margin-top: 0.4rem;
+      }
+
+      .ok {
+        color: var(--ok);
+      }
+
+      .warn {
+        color: var(--warn);
+      }
+
+      .err {
+        color: var(--err);
+      }
+
+      @media (max-width: 760px) {
+        .row,
+        .row-3 {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <h1>ITHoS Bedrock Agent Demo Console</h1>
+
+      <section class="panel" aria-labelledby="tickets-title">
+        <h2 id="tickets-title">Tickets</h2>
+        <div class="row">
+          <input
+            id="ticketsUrl"
+            type="url"
+            placeholder="https://<http-api-id>.execute-api.eu-central-1.amazonaws.com/tickets"
+          />
+          <button id="loadTicketsBtn" type="button">Load Tickets</button>
+        </div>
+        <div id="ticketCount" class="count">-</div>
+        <div id="ticketStatus" class="status">Enter the Ticket Reader endpoint and load.</div>
+        <div id="ticketsList" class="ticket-list hidden"></div>
+      </section>
+
+      <section class="panel" aria-labelledby="chat-title">
+        <h2 id="chat-title">Chat WebSocket</h2>
+
+        <div id="chatOnboarding" class="chat-onboarding">
+          <p id="wsHelp" class="chat-onboarding-title">
+            Enter your WebSocket API endpoint to start chatting.
+          </p>
+          <input
+            id="wsUrl"
+            type="url"
+            placeholder="wss://<websocket-api-id>.execute-api.eu-central-1.amazonaws.com/prod"
+          />
+          <button id="connectBtn" type="button">Start Chat</button>
+        </div>
+
+        <div id="chatApp" class="hidden">
+          <div class="chat-toolbar">
+            <button id="disconnectBtn" type="button" class="btn-subtle">Change Endpoint</button>
+          </div>
+          <div id="chatLog" class="chat-log" aria-live="polite"></div>
+          <div class="chat-compose">
+            <input id="message" type="text" placeholder="Type your message..." />
+            <button id="sendBtn" type="button" disabled>Send</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      let socket = null;
+
+      const ticketsUrlInput = document.getElementById("ticketsUrl");
+      const loadTicketsBtn = document.getElementById("loadTicketsBtn");
+      const ticketCount = document.getElementById("ticketCount");
+      const ticketStatus = document.getElementById("ticketStatus");
+      const ticketsList = document.getElementById("ticketsList");
+
+      const wsUrlInput = document.getElementById("wsUrl");
+      const wsHelp = document.getElementById("wsHelp");
+      const chatOnboarding = document.getElementById("chatOnboarding");
+      const chatApp = document.getElementById("chatApp");
+      const connectBtn = document.getElementById("connectBtn");
+      const disconnectBtn = document.getElementById("disconnectBtn");
+      const sendBtn = document.getElementById("sendBtn");
+      const messageInput = document.getElementById("message");
+      const chatLog = document.getElementById("chatLog");
+
+      const qs = new URLSearchParams(window.location.search);
+      if (qs.get("ticketsApi")) ticketsUrlInput.value = qs.get("ticketsApi");
+      if (qs.get("ws")) wsUrlInput.value = qs.get("ws");
+
+      function appendMessage(role, text) {
+        const wrapper = document.createElement("div");
+        wrapper.className = `msg ${role}`;
+
+        const meta = document.createElement("p");
+        const label = role === "user" ? "You" : "Assistant";
+        meta.className = "msg-meta";
+        meta.textContent = `${new Date().toLocaleTimeString()} · ${label}`;
+
+        const body = document.createElement("p");
+        body.className = "msg-text";
+        body.textContent = text;
+
+        wrapper.appendChild(meta);
+        wrapper.appendChild(body);
+        chatLog.appendChild(wrapper);
+        chatLog.scrollTop = chatLog.scrollHeight;
+      }
+
+      function showOnboarding(message = "Enter your WebSocket API endpoint to start chatting.") {
+        chatApp.classList.add("hidden");
+        chatOnboarding.classList.remove("hidden");
+        wsHelp.textContent = message;
+        sendBtn.disabled = true;
+        connectBtn.textContent = "Start Chat";
+      }
+
+      function showChatApp() {
+        chatOnboarding.classList.add("hidden");
+        chatApp.classList.remove("hidden");
+        sendBtn.disabled = false;
+        connectBtn.textContent = "Connected";
+        if (!chatLog.dataset.greeted) {
+          appendMessage(
+            "assistant",
+            "Hi! I can help you with ITHS course questions (single course info, course lists/filters, and course comparisons) and I can help create support tickets when you describe your issue."
+          );
+          chatLog.dataset.greeted = "true";
+        }
+      }
+
+      function normalizeWebSocketUrl(raw) {
+        let value = (raw || "").trim();
+        if (!value) return "";
+        value = value.replace(/^https:\/\//i, "wss://").replace(/^http:\/\//i, "ws://");
+        value = value.replace(/\/+$/, "");
+        return value;
+      }
+
+      function renderTickets(tickets) {
+        ticketsList.innerHTML = "";
+        ticketsList.classList.remove("hidden");
+
+        if (!tickets.length) {
+          const empty = document.createElement("p");
+          empty.className = "ticket-meta";
+          empty.textContent = "No tickets found.";
+          ticketsList.appendChild(empty);
+          return;
+        }
+
+        for (const ticket of tickets) {
+          const wrapper = document.createElement("article");
+          wrapper.className = "ticket-item";
+
+          const meta = document.createElement("p");
+          meta.className = "ticket-meta";
+
+          const status = (ticket.status || "Open").trim();
+          const createdAt = ticket.createdAt ? new Date(ticket.createdAt).toLocaleString() : "Unknown time";
+
+          const statusClass = status.toLowerCase() === "closed" ? "closed" : "open";
+          meta.textContent = `#${ticket.ticketId || "unknown"} · ${createdAt}`;
+
+          const statusBadge = document.createElement("span");
+          statusBadge.className = `ticket-status ${statusClass}`;
+          statusBadge.textContent = status;
+          meta.appendChild(statusBadge);
+
+          const desc = document.createElement("p");
+          desc.className = "ticket-desc";
+          desc.textContent = ticket.description || "No description";
+
+          wrapper.appendChild(meta);
+          wrapper.appendChild(desc);
+          ticketsList.appendChild(wrapper);
+        }
+      }
+
+      async function loadTickets() {
+        if (window.location.protocol === "file:") {
+          ticketCount.textContent = "-";
+          ticketStatus.textContent =
+            "Open this page via http(s), not file://. Example: cd frontend && python3 -m http.server 8080";
+          ticketStatus.className = "status err";
+          ticketsList.classList.add("hidden");
+          return;
+        }
+
+        const endpoint = ticketsUrlInput.value.trim();
+        if (!endpoint) {
+          ticketStatus.textContent = "Ticket endpoint is required.";
+          ticketStatus.className = "status err";
+          ticketsList.classList.add("hidden");
+          return;
+        }
+
+        ticketStatus.textContent = "Loading...";
+        ticketStatus.className = "status";
+
+        try {
+          const res = await fetch(endpoint, { method: "GET" });
+          if (!res.ok) {
+            throw new Error(`HTTP ${res.status}`);
+          }
+          const payload = await res.json();
+
+          let tickets = [];
+          if (Array.isArray(payload.tickets)) {
+            tickets = payload.tickets;
+          } else if (payload.ticket && typeof payload.ticket === "object") {
+            tickets = [payload.ticket];
+          }
+
+          if (!Array.isArray(tickets)) {
+            throw new Error("Unexpected ticket response shape");
+          }
+
+          const count = typeof payload.count === "number" ? payload.count : tickets.length;
+          ticketCount.textContent = String(count);
+          ticketStatus.textContent = "Tickets loaded.";
+          ticketStatus.className = "status ok";
+          renderTickets(tickets);
+        } catch (err) {
+          ticketCount.textContent = "-";
+          ticketStatus.textContent = `Failed to load tickets: ${err.message}`;
+          ticketStatus.className = "status err";
+          ticketsList.classList.add("hidden");
+          ticketsList.innerHTML = "";
+        }
+      }
+
+      function disconnectSocket(reason = "Disconnected") {
+        if (socket) {
+          socket.onopen = null;
+          socket.onmessage = null;
+          socket.onerror = null;
+          socket.onclose = null;
+          socket.close();
+          socket = null;
+        }
+        showOnboarding("Enter your WebSocket API endpoint to start chatting.");
+      }
+
+      function connectSocket() {
+        const wsUrl = normalizeWebSocketUrl(wsUrlInput.value);
+        if (!wsUrl) {
+          wsHelp.textContent = "WebSocket URL is required.";
+          return;
+        }
+        if (!/^wss?:\/\//i.test(wsUrl)) {
+          wsHelp.textContent = "WebSocket URL must start with ws:// or wss://.";
+          return;
+        }
+        wsUrlInput.value = wsUrl;
+
+        if (socket && socket.readyState === WebSocket.OPEN) {
+          disconnectSocket("Disconnected");
+          return;
+        }
+
+        socket = new WebSocket(wsUrl);
+        wsHelp.textContent = "Connecting...";
+
+        socket.onopen = () => {
+          showChatApp();
+          messageInput.focus();
+        };
+
+        socket.onmessage = (event) => {
+          try {
+            const parsed = JSON.parse(event.data);
+            if (parsed.answer) {
+              appendMessage("assistant", parsed.answer);
+              return;
+            }
+            if (parsed.error) {
+              appendMessage("assistant", parsed.error);
+              return;
+            }
+            appendMessage("assistant", JSON.stringify(parsed));
+          } catch {
+            appendMessage("assistant", event.data);
+          }
+        };
+
+        socket.onerror = () => {
+          showOnboarding("Connection error. Please check the WebSocket URL and try again.");
+        };
+
+        socket.onclose = (event) => {
+          if (chatApp.classList.contains("hidden")) {
+            const hint = event && event.code ? ` (code ${event.code})` : "";
+            showOnboarding(`Connection closed${hint}. Verify endpoint and stage (example: .../prod).`);
+            socket = null;
+            return;
+          }
+          disconnectSocket("Connection closed");
+        };
+      }
+
+      function sendMessage() {
+        if (!socket || socket.readyState !== WebSocket.OPEN) {
+          showOnboarding("Connect to the WebSocket API before sending a message.");
+          return;
+        }
+
+        const message = messageInput.value.trim();
+        if (!message) {
+          return;
+        }
+
+        const payload = {
+          action: "sendMessage",
+          message,
+        };
+
+        socket.send(JSON.stringify(payload));
+        appendMessage("user", message);
+        messageInput.value = "";
+        messageInput.focus();
+      }
+
+      loadTicketsBtn.addEventListener("click", loadTickets);
+      connectBtn.addEventListener("click", connectSocket);
+      disconnectBtn.addEventListener("click", () => disconnectSocket("Disconnected"));
+      sendBtn.addEventListener("click", sendMessage);
+      wsUrlInput.addEventListener("keydown", (evt) => {
+        if (evt.key === "Enter") connectSocket();
+      });
+      messageInput.addEventListener("keydown", (evt) => {
+        if (evt.key === "Enter") sendMessage();
+      });
+    </script>
+  </body>
+</html>

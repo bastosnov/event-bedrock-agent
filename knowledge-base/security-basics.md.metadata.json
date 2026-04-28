@@ -1,0 +1,23 @@
+{
+  "metadataAttributes": {
+    "course": "security",
+    "courseName": "Security Basics",
+    "program": "systemutvecklare-java",
+    "semester": "autumn-2026",
+    "school": "ITHS",
+    "documentType": "course-info",
+    "level": "beginner",
+    "topics": [
+      "security",
+      "authentication",
+      "authorization",
+      "least-privilege",
+      "sensitive-data"
+    ],
+    "format": [
+      "lectures",
+      "practical-examples"
+    ],
+    "language": "en"
+  }
+}

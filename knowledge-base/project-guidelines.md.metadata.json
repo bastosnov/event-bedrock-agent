@@ -1,0 +1,22 @@
+{
+  "metadataAttributes": {
+    "course": "cloud-development",
+    "courseName": "Project Guidelines",
+    "program": "systemutvecklare-java",
+    "semester": "autumn-2026",
+    "school": "ITHS",
+    "documentType": "project-guidelines",
+    "level": "intermediate",
+    "topics": [
+      "final-project",
+      "aws",
+      "api",
+      "documentation",
+      "cloud-development"
+    ],
+    "format": [
+      "project-work"
+    ],
+    "language": "en"
+  }
+}

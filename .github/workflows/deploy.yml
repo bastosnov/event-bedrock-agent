@@ -1,0 +1,164 @@
+name: Deploy SAM Stack
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: eu-central-1
+  STACK_NAME: ithos-bedrock-agent-demo
+  SAM_DEPLOY_S3_BUCKET: ${{ vars.SAM_DEPLOY_S3_BUCKET }}
+  FRONTEND_S3_BUCKET: ${{ vars.FRONTEND_S3_BUCKET }}
+  ORG_PATH: ${{ secrets.ORG_PATH }}
+  CFN_TEMPLATE_KEY: cloudformation/current-template.yaml
+  WEBSOCKET_STAGE_NAME: prod
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: default
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          role-session-name: github-actions-sam-deploy-${{ github.run_id }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: CloudFormation Validate
+        run: aws cloudformation validate-template --template-body file://template.yaml --region "$AWS_REGION"
+
+      - name: Validate artifact bucket variable
+        run: |
+          if [ -z "$SAM_DEPLOY_S3_BUCKET" ]; then
+            echo "Missing repository variable: SAM_DEPLOY_S3_BUCKET"
+            exit 1
+          fi
+
+      - name: Validate frontend bucket variable
+        run: |
+          if [ -z "$FRONTEND_S3_BUCKET" ]; then
+            echo "Missing repository variable: FRONTEND_S3_BUCKET"
+            exit 1
+          fi
+
+      - name: Validate org path secret
+        run: |
+          if [ -z "$ORG_PATH" ]; then
+            echo "Missing repository secret: ORG_PATH"
+            exit 1
+          fi
+
+      - name: Ensure SAM artifact bucket org-path read policy
+        run: |
+          EXISTING_POLICY=$(aws s3api get-bucket-policy \
+            --bucket "$SAM_DEPLOY_S3_BUCKET" \
+            --query Policy \
+            --output text 2>/dev/null || true)
+
+          SAM_DEPLOY_S3_BUCKET="$SAM_DEPLOY_S3_BUCKET" \
+          ORG_PATH="$ORG_PATH" \
+          EXISTING_POLICY="$EXISTING_POLICY" \
+          python3 - <<'PY' > bucket-policy.json
+          import json
+          import os
+
+          bucket = os.environ["SAM_DEPLOY_S3_BUCKET"]
+          org_path = os.environ["ORG_PATH"]
+          existing = os.environ.get("EXISTING_POLICY", "").strip()
+
+          if existing:
+              policy = json.loads(existing)
+          else:
+              policy = {"Version": "2012-10-17", "Statement": []}
+
+          statements = policy.get("Statement", [])
+          if isinstance(statements, dict):
+              statements = [statements]
+
+          sid = "AllowOuReadArtifacts"
+          statements = [s for s in statements if s.get("Sid") != sid]
+          statements.append(
+              {
+                  "Sid": sid,
+                  "Effect": "Allow",
+                  "Principal": "*",
+                  "Action": "s3:GetObject",
+                  "Resource": f"arn:aws:s3:::{bucket}/*",
+                  "Condition": {
+                      "ForAnyValue:StringLike": {
+                          "aws:PrincipalOrgPaths": f"{org_path}*"
+                      }
+                  },
+              }
+          )
+
+          policy["Version"] = policy.get("Version", "2012-10-17")
+          policy["Statement"] = statements
+          print(json.dumps(policy))
+          PY
+
+          aws s3api put-bucket-policy \
+            --bucket "$SAM_DEPLOY_S3_BUCKET" \
+            --policy file://bucket-policy.json
+
+      - name: Build Lambda zip artifacts
+        run: |
+          cd src/orchestrator && zip -r ../../orchestrator.zip .
+          cd ../action_group && zip -r ../../action-group.zip .
+          cd ../ticket_reader && zip -r ../../ticket-reader.zip .
+
+      - name: Upload Lambda artifacts with deploy-specific keys
+        run: |
+          DEPLOY_ID="${GITHUB_SHA}-${GITHUB_RUN_ID}"
+          ORCHESTRATOR_KEY="lambda/orchestrator-${DEPLOY_ID}.zip"
+          ACTION_GROUP_KEY="lambda/action-group-${DEPLOY_ID}.zip"
+          TICKET_READER_KEY="lambda/ticket-reader-${DEPLOY_ID}.zip"
+
+          aws s3 cp orchestrator.zip "s3://$SAM_DEPLOY_S3_BUCKET/$ORCHESTRATOR_KEY"
+          aws s3 cp action-group.zip "s3://$SAM_DEPLOY_S3_BUCKET/$ACTION_GROUP_KEY"
+          aws s3 cp ticket-reader.zip "s3://$SAM_DEPLOY_S3_BUCKET/$TICKET_READER_KEY"
+
+          echo "ORCHESTRATOR_CODE_S3_KEY=$ORCHESTRATOR_KEY" >> "$GITHUB_ENV"
+          echo "ACTION_GROUP_CODE_S3_KEY=$ACTION_GROUP_KEY" >> "$GITHUB_ENV"
+          echo "TICKET_READER_CODE_S3_KEY=$TICKET_READER_KEY" >> "$GITHUB_ENV"
+
+      - name: Upload canonical CloudFormation template
+        run: |
+          aws s3 cp template.yaml "s3://$SAM_DEPLOY_S3_BUCKET/$CFN_TEMPLATE_KEY"
+
+      - name: CloudFormation Deploy
+        run: |
+          aws cloudformation deploy \
+            --stack-name "$STACK_NAME" \
+            --region "$AWS_REGION" \
+            --template-file template.yaml \
+            --capabilities CAPABILITY_IAM \
+            --parameter-overrides \
+              LambdaCodeS3Bucket="$SAM_DEPLOY_S3_BUCKET" \
+              OrchestratorCodeS3Key="$ORCHESTRATOR_CODE_S3_KEY" \
+              ActionGroupCodeS3Key="$ACTION_GROUP_CODE_S3_KEY" \
+              TicketReaderCodeS3Key="$TICKET_READER_CODE_S3_KEY" \
+              WebSocketStageName="$WEBSOCKET_STAGE_NAME" \
+            --no-fail-on-empty-changeset
+
+      - name: Deploy frontend to S3
+        run: |
+          aws s3 sync frontend/ "s3://$FRONTEND_S3_BUCKET" \
+            --delete \
+            --exclude ".DS_Store"

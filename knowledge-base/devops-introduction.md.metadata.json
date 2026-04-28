@@ -1,0 +1,23 @@
+{
+  "metadataAttributes": {
+    "course": "devops",
+    "courseName": "DevOps Introduction",
+    "program": "systemutvecklare-java",
+    "semester": "autumn-2026",
+    "school": "ITHS",
+    "documentType": "course-info",
+    "level": "beginner",
+    "topics": [
+      "devops",
+      "ci-cd",
+      "automation",
+      "deployment-pipelines",
+      "git-workflows"
+    ],
+    "format": [
+      "hands-on-labs",
+      "group-work"
+    ],
+    "language": "en"
+  }
+}

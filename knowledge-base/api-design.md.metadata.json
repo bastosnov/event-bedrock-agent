@@ -1,0 +1,23 @@
+{
+  "metadataAttributes": {
+    "course": "api-design",
+    "courseName": "API Design",
+    "program": "systemutvecklare-java",
+    "semester": "spring-2026",
+    "school": "ITHS",
+    "documentType": "course-info",
+    "level": "intermediate",
+    "topics": [
+      "api-design",
+      "rest",
+      "http-methods",
+      "validation",
+      "error-handling"
+    ],
+    "format": [
+      "code-alongs",
+      "design-exercises"
+    ],
+    "language": "en"
+  }
+}
