@@ -15,6 +15,7 @@ env:
   STACK_NAME: ithos-bedrock-agent-demo
   SAM_DEPLOY_S3_BUCKET: ${{ vars.SAM_DEPLOY_S3_BUCKET }}
   FRONTEND_S3_BUCKET: ${{ vars.FRONTEND_S3_BUCKET }}
+  WORKSPACE_ID: ${{ vars.WORKSPACE_ID }}
   ORG_PATH: ${{ secrets.ORG_PATH }}
   CFN_TEMPLATE_KEY: cloudformation/current-template.yaml
   WEBSOCKET_STAGE_NAME: prod
@@ -61,6 +62,13 @@ jobs:
         run: |
           if [ -z "$ORG_PATH" ]; then
             echo "Missing repository secret: ORG_PATH"
+            exit 1
+          fi
+
+      - name: Validate workspace id variable
+        run: |
+          if [ -z "$WORKSPACE_ID" ]; then
+            echo "Missing repository variable: WORKSPACE_ID"
             exit 1
           fi
 
@@ -154,6 +162,7 @@ jobs:
               OrchestratorCodeS3Key="$ORCHESTRATOR_CODE_S3_KEY" \
               ActionGroupCodeS3Key="$ACTION_GROUP_CODE_S3_KEY" \
               TicketReaderCodeS3Key="$TICKET_READER_CODE_S3_KEY" \
+              WorkspaceId="$WORKSPACE_ID" \
               WebSocketStageName="$WEBSOCKET_STAGE_NAME" \
             --no-fail-on-empty-changeset
 
